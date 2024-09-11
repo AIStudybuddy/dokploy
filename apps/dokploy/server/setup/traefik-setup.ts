@@ -167,7 +167,7 @@ export const createDefaultServerTraefikConfig = () => {
 	);
 };
 
-export const createDefaultTraefikConfig = (enableHTTP3: boolean) => {
+export const createDefaultTraefikConfig = (enableHTTP3: boolean = false) => {
 	const mainConfig = path.join(MAIN_TRAEFIK_PATH, "traefik.yml");
 	const acmeJsonPath = path.join(DYNAMIC_TRAEFIK_PATH, "acme.json");
 
