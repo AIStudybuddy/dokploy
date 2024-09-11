@@ -13,11 +13,13 @@ const TRAEFIK_PORT = Number.parseInt(process.env.TRAEFIK_PORT ?? "", 10) || 80;
 
 interface TraefikOptions {
 	enableDashboard?: boolean;
+	enableHTTP3?: boolean
 	env?: string[];
 }
 
 export const initializeTraefik = async ({
 	enableDashboard = false,
+	enableHTTP3 = false,
 	env,
 }: TraefikOptions = {}) => {
 	const imageName = "traefik:v3.1.2";
@@ -61,12 +63,17 @@ export const initializeTraefik = async ({
 		},
 		EndpointSpec: {
 			Ports: [
-				{
-					TargetPort: 443,
-					PublishedPort: TRAEFIK_SSL_PORT,
-					PublishMode: "host",
-					Protocol : "udp",
-				},
+				...(
+					enableHTTP3 ? (
+					[
+						{
+							TargetPort: 443,
+							PublishedPort: TRAEFIK_SSL_PORT,
+							PublishMode: "host",
+							Protocol : "udp"
+						} as const
+					]) : []
+				),
 				{
 					TargetPort: 443,
 					PublishedPort: TRAEFIK_SSL_PORT,
