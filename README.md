@@ -52,7 +52,7 @@ For detailed documentation, visit [docs.dokploy.com](https://docs.dokploy.com).
 
 [Github Sponsors](https://github.com/sponsors/Siumauricio)
 
-<!-- Hero Sponsors 🎖 -->
+<!-- Hero Sponsors  -->
 
 <!-- Add Hero Sponsors here -->
 
