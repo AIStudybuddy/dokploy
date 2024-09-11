@@ -65,6 +65,13 @@ export const initializeTraefik = async ({
 					TargetPort: 443,
 					PublishedPort: TRAEFIK_SSL_PORT,
 					PublishMode: "host",
+					Protocol : "udp",
+				},
+				{
+					TargetPort: 443,
+					PublishedPort: TRAEFIK_SSL_PORT,
+					PublishMode: "host",
+					Protocol : "tcp",
 				},
 				{
 					TargetPort: 80,
@@ -153,7 +160,7 @@ export const createDefaultServerTraefikConfig = () => {
 	);
 };
 
-export const createDefaultTraefikConfig = () => {
+export const createDefaultTraefikConfig = (enableHTTP3: boolean) => {
 	const mainConfig = path.join(MAIN_TRAEFIK_PATH, "traefik.yml");
 	const acmeJsonPath = path.join(DYNAMIC_TRAEFIK_PATH, "acme.json");
 
@@ -194,6 +201,10 @@ export const createDefaultTraefikConfig = () => {
 			websecure: {
 				address: `:${TRAEFIK_SSL_PORT}`,
 				...(process.env.NODE_ENV === "production" && {
+
+					http3: enableHTTP3 ? {
+						advertisedPort: TRAEFIK_SSL_PORT,
+					} : undefined,
 					http: {
 						tls: {
 							certResolver: "letsencrypt",
