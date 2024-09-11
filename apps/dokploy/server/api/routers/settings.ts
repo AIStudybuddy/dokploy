@@ -2,6 +2,7 @@ import { MAIN_TRAEFIK_PATH, MONITORING_PATH } from "@/server/constants";
 import {
 	apiAssignDomain,
 	apiEnableDashboard,
+	apiEnableHTTP3,
 	apiModifyTraefikConfig,
 	apiReadStatsLogs,
 	apiReadTraefikConfig,
@@ -9,7 +10,7 @@ import {
 	apiTraefikConfig,
 	apiUpdateDockerCleanup,
 } from "@/server/db/schema";
-import { initializeTraefik } from "@/server/setup/traefik-setup";
+import { createDefaultTraefikConfig, initializeTraefik } from "@/server/setup/traefik-setup";
 import { logRotationManager } from "@/server/utils/access-log/handler";
 import { parseRawConfig, processLogs } from "@/server/utils/access-log/utils";
 import {
@@ -54,6 +55,7 @@ import {
 } from "../services/settings";
 import { canAccessToTraefikFiles } from "../services/user";
 import { adminProcedure, createTRPCRouter, protectedProcedure } from "../trpc";
+import { create } from "lodash";
 
 export const settingsRouter = createTRPCRouter({
 	reloadServer: adminProcedure.mutation(async () => {
@@ -79,6 +81,16 @@ export const settingsRouter = createTRPCRouter({
 			await initializeTraefik({
 				enableDashboard: input.enableDashboard,
 			});
+			return true;
+		}),
+
+	toggleHTTP3: adminProcedure
+		.input(apiEnableHTTP3)
+		.mutation(async ({ input }) => {
+			await initializeTraefik({
+				enableHTTP3: input.enableHTTP3,
+			});
+			createDefaultTraefikConfig(input.enableHTTP3)
 			return true;
 		}),
 

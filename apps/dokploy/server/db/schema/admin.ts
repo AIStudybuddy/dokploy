@@ -81,6 +81,10 @@ export const apiEnableDashboard = z.object({
 	enableDashboard: z.boolean().optional(),
 });
 
+export const apiEnableHTTP3 = z.object({
+	enableHTTP3: z.boolean().default(false),
+});
+
 export const apiReadStatsLogs = z.object({
 	page: z
 		.object({
