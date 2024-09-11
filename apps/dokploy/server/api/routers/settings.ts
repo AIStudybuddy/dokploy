@@ -56,6 +56,7 @@ import {
 import { canAccessToTraefikFiles } from "../services/user";
 import { adminProcedure, createTRPCRouter, protectedProcedure } from "../trpc";
 import { create } from "lodash";
+import type{ PortConfig } from "dockerode";
 
 export const settingsRouter = createTRPCRouter({
 	reloadServer: adminProcedure.mutation(async () => {
@@ -87,10 +88,10 @@ export const settingsRouter = createTRPCRouter({
 	toggleHTTP3: adminProcedure
 		.input(apiEnableHTTP3)
 		.mutation(async ({ input }) => {
+			createDefaultTraefikConfig(input.enableHTTP3)
 			await initializeTraefik({
 				enableHTTP3: input.enableHTTP3,
 			});
-			createDefaultTraefikConfig(input.enableHTTP3)
 			return true;
 		}),
 
@@ -357,10 +358,25 @@ export const settingsRouter = createTRPCRouter({
 			"docker service inspect --format='{{json .Endpoint.Ports}}' dokploy-traefik",
 		);
 
-		const parsed: any[] = JSON.parse(stdout.trim());
+		const parsed: PortConfig[] = JSON.parse(stdout.trim());
 
 		for (const port of parsed) {
 			if (port.PublishedPort === 8080) {
+				return true;
+			}
+		}
+
+		return false;
+	}),
+	haveTraefikHTTP3Enabled: adminProcedure.query(async () => {
+		const { stdout } = await execAsync(
+			"docker service inspect --format='{{json .Endpoint.Ports}}' dokploy-traefik",
+		);
+
+		const parsed: PortConfig[] = JSON.parse(stdout.trim());
+
+		for (const port of parsed) {
+			if (port.Protocol === "udp" && port.PublishedPort === 443) {
 				return true;
 			}
 		}

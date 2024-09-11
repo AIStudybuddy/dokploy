@@ -40,6 +40,8 @@ export const WebServer = () => {
 		api.settings.cleanAll.useMutation();
 	const { mutateAsync: toggleDashboard, isLoading: toggleDashboardIsLoading } =
 		api.settings.toggleDashboard.useMutation();
+	const { mutateAsync: toggleHTTP3 } =
+		api.settings.toggleHTTP3.useMutation();
 
 	const {
 		mutateAsync: cleanDockerBuilder,
@@ -70,6 +72,8 @@ export const WebServer = () => {
 
 	const { data: haveTraefikDashboardPortEnabled, refetch: refetchDashboard } =
 		api.settings.haveTraefikDashboardPortEnabled.useQuery();
+	const { data: haveTraefikHTTP3Enabled, refetch: refetchHasHTTP3 } =
+		api.settings.haveTraefikHTTP3Enabled.useQuery();
 
 	return (
 		<Card className="rounded-lg w-full bg-transparent">
@@ -202,6 +206,31 @@ export const WebServer = () => {
 									<span>
 										{haveTraefikDashboardPortEnabled ? "Disable" : "Enable"}{" "}
 										Dashboard
+									</span>
+								</DropdownMenuItem>
+
+								<DropdownMenuItem
+									onClick={async () => {
+										await toggleHTTP3({
+											enableHTTP3: !haveTraefikHTTP3Enabled,
+										})
+											.then(async () => {
+												toast.success(
+													`${haveTraefikHTTP3Enabled ? "Disabled" : "Enabled"} HTTP/3`,
+												);
+												refetchHasHTTP3();
+											})
+											.catch(() => {
+												toast.error(
+													`${haveTraefikHTTP3Enabled ? "Disabled" : "Enabled"} HTTP/3`,
+												);
+											});
+									}}
+									className="w-full space-x-3 cursor-pointer"
+								>
+									<span>
+										{haveTraefikHTTP3Enabled ? "Disable" : "Enable"}{" "}
+										HTTP/3
 									</span>
 								</DropdownMenuItem>
 
