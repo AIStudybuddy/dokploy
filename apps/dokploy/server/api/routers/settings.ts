@@ -10,7 +10,7 @@ import {
 	apiTraefikConfig,
 	apiUpdateDockerCleanup,
 } from "@/server/db/schema";
-import { createDefaultTraefikConfig, initializeTraefik } from "@/server/setup/traefik-setup";
+import { createDefaultTraefikConfig, initializeTraefik, updateTraefikConfig } from "@/server/setup/traefik-setup";
 import { logRotationManager } from "@/server/utils/access-log/handler";
 import { parseRawConfig, processLogs } from "@/server/utils/access-log/utils";
 import {
@@ -88,7 +88,7 @@ export const settingsRouter = createTRPCRouter({
 	toggleHTTP3: adminProcedure
 		.input(apiEnableHTTP3)
 		.mutation(async ({ input }) => {
-			createDefaultTraefikConfig(input.enableHTTP3)
+			updateTraefikConfig(input.enableHTTP3)
 			await initializeTraefik({
 				enableHTTP3: input.enableHTTP3,
 			});

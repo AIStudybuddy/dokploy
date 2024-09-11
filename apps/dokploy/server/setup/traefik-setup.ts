@@ -1,11 +1,12 @@
-import { chmodSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { ContainerTaskSpec, CreateServiceOptions } from "dockerode";
-import { dump } from "js-yaml";
+import { dump, load } from "js-yaml";
 import { DYNAMIC_TRAEFIK_PATH, MAIN_TRAEFIK_PATH, docker } from "../constants";
 import { pullImage } from "../utils/docker/utils";
 import type { FileConfig } from "../utils/traefik/file-types";
 import type { MainTraefikConfig } from "../utils/traefik/types";
+import { error } from "node:console";
 
 const TRAEFIK_SSL_PORT =
 	Number.parseInt(process.env.TRAEFIK_SSL_PORT ?? "", 10) || 443;
@@ -166,6 +167,45 @@ export const createDefaultServerTraefikConfig = () => {
 		"utf8",
 	);
 };
+
+export const updateTraefikConfig = (enableHTTP3: boolean) => {
+	const mainConfigPath = path.join(MAIN_TRAEFIK_PATH, "traefik.yml");
+	if (!existsSync(mainConfigPath)) {
+		createDefaultTraefikConfig(enableHTTP3)
+		return;
+	}
+	const yamlConfig: string = readFileSync(mainConfigPath, {encoding: "utf8"})
+	type Thing = {entryPoints?:{websecure?:{http3?:{advertisedPort: number}}}}
+	let configObj = load(yamlConfig) as Thing;
+	if (typeof configObj !== "object" || configObj == null)
+	{
+		console.log(configObj);
+		console.log(typeof configObj);
+		throw new Error("failed to parse traefik yaml");
+	}
+	if (enableHTTP3)
+	{
+		if (!configObj.entryPoints)
+		{
+			configObj["entryPoints"] = {};
+		}
+		if (!configObj.entryPoints.websecure)
+		{
+			configObj["entryPoints"]["websecure"] = {};
+		}
+		configObj["entryPoints"]!["websecure"]!["http3"] = {advertisedPort: TRAEFIK_SSL_PORT};
+	}
+	else
+	{
+		if (configObj.entryPoints && configObj.entryPoints.websecure && configObj.entryPoints.websecure.http3)
+		{
+			delete configObj["entryPoints"]["websecure"]["http3"];
+		}
+	}
+	const yamlStr = dump(configObj);
+
+	writeFileSync(mainConfigPath, yamlStr, "utf8");
+}
 
 export const createDefaultTraefikConfig = (enableHTTP3: boolean = false) => {
 	const mainConfig = path.join(MAIN_TRAEFIK_PATH, "traefik.yml");
