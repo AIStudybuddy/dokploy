@@ -1,0 +1,53 @@
+---
+title: HTTP/3
+description: 'Learn how to enable HTTP/3 for Traefik.'
+---
+import { Callout } from 'fumadocs-ui/components/callout';
+
+### Enabling/Disabling via dashboard
+
+<Callout type="warn">
+  **Warning:** Using HTTP/3 requires the UDP protocol be open for the QUIC protocol to work. So if you're using a firewall like Hetzner 
+  make sure you allow inbound traffic on port 443 for UDP protocol.
+</Callout>
+
+<Callout type="info">
+  **Info:** Using HTTP/3 requires that the service you want to use has TLS enabled. Some browsers like Chrome also require that the
+  SSL certificate is by a trusted CA (Certificate Authority) like Let's Encrypt and won't accept the default Traefik cert.
+</Callout>
+
+- Navigate to the `/dashboard/settings/server` route.
+- Click on the 'Traefik' button in the 'Web server settings' section
+- In the menu click on 'Enable HTTP/3' or 'Disable HTTP/3'
+- Wait for a few seconds while the Traefik container restarts.
+
+You can check that HTTP/3 is enabled either by verifying that the Traefik container has opened UDP traffic on port 443.
+You can also verify by visiting the Dokploy dashboard (or one of your services running behind Traefik) and checking if the `Alt-Svc: h3=":443"; ma=2592000` header
+is set or that the protocol is `h3` in your browsers devtools. Otherwise you can use the website [`https://http3check.net/`](https://http3check.net/)
+to check externally.
+
+---
+
+### What is HTTP/3?
+The Hypertext Transfer Protocol (HTTP) is an essential backbone of the Internet — it dictates how communications platforms and devices exchange information and fetch resources. In short, it is what allows users to load websites.
+
+HTTP/3 is the latest major version of HTTP. Web browsers and servers can use it for significant upgrades to user experience, including performance, reliability, and security. Negotiating HTTP versions happens seamlessly, requiring no changes to website code.
+
+### Why is a new version of HTTP needed?
+QUIC helps fix some of HTTP/2's biggest shortcomings:
+
+- Decreasing the effects of packet loss — when one packet of information does not make it to its destination, it will no longer block all streams of information, a problem known as "head-of-line blocking"
+- Faster connection establishment: QUIC combines the cryptographic and transport handshakes
+- Zero round-trip time (0-RTT): For servers they have already connected to, clients can skip the handshake requirement (the process of acknowledging and verifying each other to determine how they will communicate)
+- More comprehensive encryption: QUIC is encrypted by default, making HTTP/3 more secure than HTTP/2 (more on this below)
+- Protecting against HTTP/2 "Rapid Reset" distributed denial-of-service (DDoS) attacks, which can slow down or crash a web server, by using a credit-based system for streams (a "stream" is a single HTTP request and response exchange) to allow HTTP/3 servers fine-grained control over stream concurrency
+- Developing a workaround for the sluggish performance when a smartphone switches from WiFi to cellular data, such as when leaving the house or office
+
+### What is encrypting by default?
+Requiring encryption within the transport layer, rather than at the application layer, has important implications for security. It means that the connection will always be encrypted. Previously, in HTTPS, the encryption and transport-layer connections occurred separately. TCP connections could carry data that was either encrypted or unencrypted, and the TCP handshake and Transport Layer Security (TLS) handshake were distinct events. However, QUIC sets up encrypted connections by default at the transport layer — application-layer data will always be encrypted.
+
+QUIC accomplishes this by combining the two handshakes into one action, reducing latency since applications must wait for only one handshake to finish before sending data. It also encrypts metadata about each connection, including packet numbers and some other parts of the header, to help keep information about user behavior out of attackers' hands. This feature was not possible with HTTP/2 because it relied on TCP and TLS.
+
+HTTP historically used plaintext TCP, which has negative consequences for security, since anyone monitoring communications can read requests and responses. Today, websites and web browsers prefer to encrypt all HTTP communications to help keep everyone safer and protect sensitive data. QUIC's encryption by default supports that goal.
+
+#### Source: [Cloudflare - What is HTTP/3?](https://www.cloudflare.com/learning/performance/what-is-http3/)
