@@ -247,11 +247,11 @@ export const createDefaultTraefikConfig = (enableHTTP3: boolean = false) => {
 			},
 			websecure: {
 				address: `:${TRAEFIK_SSL_PORT}`,
+				http3: enableHTTP3 ? {
+					advertisedPort: TRAEFIK_SSL_PORT,
+				} : undefined,
 				...(process.env.NODE_ENV === "production" && {
 
-					http3: enableHTTP3 ? {
-						advertisedPort: TRAEFIK_SSL_PORT,
-					} : undefined,
 					http: {
 						tls: {
 							certResolver: "letsencrypt",

@@ -6,11 +6,15 @@ vi.mock("node:fs", () => ({
 }));
 
 import type { Admin } from "@/server/api/services/admin";
-import { createDefaultServerTraefikConfig } from "@/server/setup/traefik-setup";
+import { createDefaultServerTraefikConfig, createDefaultTraefikConfig, updateTraefikConfig } from "@/server/setup/traefik-setup";
 import { loadOrCreateConfig } from "@/server/utils/traefik/application";
 import type { FileConfig } from "@/server/utils/traefik/file-types";
 import { updateServerTraefik } from "@/server/utils/traefik/web-server";
 import { beforeEach, expect, test, vi } from "vitest";
+import path from "node:path";
+import { MAIN_TRAEFIK_PATH } from "@/server/constants";
+import * as Yaml from "js-yaml"
+import { MainTraefikConfig } from "@/server/utils/traefik/types";
 
 const baseAdmin: Admin = {
 	createdAt: "",
@@ -88,4 +92,24 @@ test("Should remove websecure if https rollback to http", () => {
 	expect(
 		config.http?.routers?.["dokploy-router-app"]?.middlewares,
 	).not.toContain("redirect-to-https");
+});
+
+test("Should enable and disable HTTP/3 enabled in entrypoint", () => {
+	const mainConfig = path.join(MAIN_TRAEFIK_PATH, "traefik.yml");
+	expect(fs.existsSync(mainConfig)).toEqual(false)
+
+	createDefaultTraefikConfig(true)
+	expect(fs.existsSync(mainConfig)).toEqual(true)
+
+	let configData = fs.readFileSync(mainConfig)
+	let config = String(configData)
+	let yml = Yaml.load(config) as MainTraefikConfig
+	expect(yml?.["entryPoints"]?.["websecure"]?.["http3"]?.["advertisedPort"]).equal(443)
+
+	updateTraefikConfig(false)
+	expect(fs.existsSync(mainConfig)).toEqual(true)
+	configData = fs.readFileSync(mainConfig)
+	config = String(configData)
+	yml = Yaml.load(config) as MainTraefikConfig
+	expect(yml?.["entryPoints"]?.["websecure"]?.["http3"]).toBeUndefined()
 });
