@@ -60,6 +60,7 @@
 		"examples/lit",
 		"---Traefik---",
 		"traefik/overview",
+		"traefik/http3",
 		"---Docker---",
 		"docker/overview",
 		"---Monitoring---",
